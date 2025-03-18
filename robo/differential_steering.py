@@ -35,8 +35,8 @@ class DifferentialSteering:
         right_tick_count = data.data
 
     def run(self):
-            while not rospy.is_shutdown():
-                pass
+        while not rospy.is_shutdown():
+            pass
         
     def publish_transform(self, x, y, theta):
         """publishes a transform between the map frame and the robot_name/base frame
