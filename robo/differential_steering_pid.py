@@ -20,15 +20,19 @@ class DifferentialSteering:
 
         self.init_left_wheel_tick = None
         self.init_right_wheel_tick = None
-        self.left_wheel_tick = None
-        self.right_wheel_tick = None
-        self.left_wheel_tick_old = None
-        self.right_wheel_tick_old = None
-        self.right_wheel_diff = None
-        self.left_wheel_diff = None
-        self.prev_fehler_rechts = None
-        self.prev_fehler_links = None
+        self.left_wheel_tick = 0
+        self.right_wheel_tick = 0
+        self.left_wheel_tick_old = 0
+        self.right_wheel_tick_old = 0
+        self.right_wheel_diff = 0
+        self.left_wheel_diff = 0
+        self.prev_fehler_rechts = 0
+        self.prev_fehler_links = 0
 
+
+        self.grad_zu_ticks = 0.848
+        self.strecke_zu_ticks = 6.76
+        
         rospy.init_node("differential_steering_prj", anonymous=True)
 
 
@@ -81,27 +85,58 @@ class DifferentialSteering:
         dt_in_sekunden = 0.1
         fehler_x = x
         fehler_y = y
-        current_x = 0
-        current_y = 0
         
         while not rospy.is_shutdown():
             current_left_tick = self.left_wheel_tick
             current_right_tick = self.right_wheel_tick
 
             
-            vel_rechts, vel_links = self.pid(fehler_x, fehler_y, dt_hz)
+            vel_rechts, vel_links = self.pid(fehler_x, fehler_y, dt_in_sekunden)
             self.move(vel_rechts, vel_links)
             
             rospy.sleep(dt_in_sekunden)
             
-            diff_links_tick = self.current_left_tick - self.left_wheel_tick
-            diff_rechts_tick = self.current_right_tick - self.right_wheel_tick
+            diff_links_tick = current_left_tick - self.left_wheel_tick
+            diff_rechts_tick = current_right_tick - self.right_wheel_tick
             
+            if diff_links_tick > diff_rechts_tick:
+                ausrichtung = (diff_links_tick - diff_rechts_tick) / self.grad_zu_ticks 
+                strecke = diff_rechts_tick / self.strecke_zu_ticks
+            else:
+                ausrichtung = (diff_rechts_tick - diff_links_tick) / self.grad_zu_ticks
+                strecke = diff_links_tick / self.strecke_zu_ticks
+                
+            x_neu = math.cos(ausrichtung) * strecke
+            y_neu = math.sin(ausrichtung) * strecke
+            theta_neu = ausrichtung
+            
+            fehler_x, fehler_y = self.transform_homogen(fehler_x, fehler_y, theta_neu, x_neu, y_neu)
+            
+            
+            
+    def homogeneous_transform(x, y, theta, tx, ty):
+        
+        # Drehwinkel in Radiant umwandeln
+        theta = np.radians(theta)
+        
+        # Transformationsmatrix (Rotation + Translation)
+        T = np.array([
+            [np.cos(theta)  , -np.sin(theta), tx],        
+            [np.sin(theta)  ,  np.cos(theta), ty],
+            [0              , 0             , 1]])
+        
+        # Punkt in homogenen Koordinaten
+        P = np.array([x, y, 1])
+        
+        # Transformation anwenden
+        P_new = T @ P
+        
+        return P_new[:2]  # Rückgabe nur der (x', y')-Koordinaten
         
 
     def pid(self, fehler_x, fehler_y, dt_in_sekunden):
         # Geschwindigkeitsverstärker damit Wert im Rahmen von den Geschiwindigkeitsgrenzen von Duckie-Robot bleibt
-        vel_verstaerker = 0.3
+        vel_verstaerker = 0.01
         # Verstärkungsfaktor P-Anteil
         kp = 0.1
         # Verstärkungsfaktor I-Anteil
@@ -110,16 +145,16 @@ class DifferentialSteering:
         kd = 0.1
         
         # Ticks, welche es braucht für einen entsprechenden Winkel
-        grad_zu_ticks = 0.848
-        winkel_ticks = math.atan(fehler_y/fehler_x) * 180 / math.pi * grad_zu_ticks
-        distance_von_fehler = math.sqrt(fehler_x**2 + fehler_y**2)
+        
+        winkel_ticks = math.atan(fehler_y/fehler_x) * 180 / math.pi * self.grad_zu_ticks
+        distance_von_fehler = math.sqrt(fehler_x**2 + fehler_y**2) * self.strecke_zu_ticks
         
         if winkel_ticks > 0:
-            fehler_links = winkel_ticks + distance_von_fehler
-            fehler_rechts = distance_von_fehler
-        else:
             fehler_links = distance_von_fehler
-            fehler_rechts = winkel_ticks + distance_von_fehler
+            fehler_rechts = distance_von_fehler + winkel_ticks
+        else:
+            fehler_links = distance_von_fehler + winkel_ticks
+            fehler_rechts = distance_von_fehler
         
         # PID Berechnung für rechts
         integral_anteil_rechts += fehler_rechts * dt_in_sekunden
@@ -148,7 +183,7 @@ class DifferentialSteering:
         if self.init_right_wheel_tick is None:
             self.init_right_wheel_tick = msg.data
         
-        self.init_right_wheel_tick = msg.data
+        self.right_wheel_tick = msg.data
     
     def run(self):
         rospy.sleep(2)
