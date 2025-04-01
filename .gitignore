@@ -2,3 +2,4 @@
 .vscode
 shoppinglist.md
 /src/duckie_lab/src/solution_part.py
+/robo/__pycache__/
