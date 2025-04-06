@@ -1,4 +1,4 @@
-from robo.Djkstra import Dijkstra
+from robo.Dijkstra import Dijkstra
 from robo.LaborynthGenerator import generateLaborynth
 
 if __name__ == '__main__':

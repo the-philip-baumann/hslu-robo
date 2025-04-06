@@ -20,7 +20,6 @@ class Node:
         return f'({self._x}, {self._y})'
 
     def __eq__(self, other):
-        print(type(other))
         return self._x == other.getx() and self._y == other.gety()
 
     def __hash__(self):
