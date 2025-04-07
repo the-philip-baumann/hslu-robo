@@ -1,8 +1,8 @@
-from Graph import Graph, Edge, Node
+from graph import Graph, Edge, Node
 from typing import Tuple
 
 
-def generateLaborynth() -> Tuple[Graph, Node, Node]:
+def generateLabirynth() -> Tuple[Graph, Node, Node]:
     """ Generiert einen Graph mit den Kreuzungen als Nodes und die Strassen als Edges. 
         Die Nodes im Graphen sind in einem 4x4 Raster gestaltet. 
         Nummerierung ist aufsteigend horizontal"""

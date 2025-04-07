@@ -3,13 +3,13 @@ from enum import Enum
 from heapq import heapify, heappop, heappush
 from typing import Dict
 
-from robo.Graph import Graph, Node
+from graph import Graph, Node
 
 
 class Instruction(Enum):
-    STRAIGHT_FORWARD = 0
-    RIGHT = 1
-    LEFT = 2
+    STRAIGHT_FORWARD = 's'
+    RIGHT = 'r'
+    LEFT = 'l'
 
 
 class Heading(Enum):

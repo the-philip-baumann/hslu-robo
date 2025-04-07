@@ -70,7 +70,7 @@ class Graph:
         for edge in edges:
             self.insert_edge(edge)
 
-    def is_adjacent(self, nodes: Tuple[Node, Node]) -> bool:
+    def is_adjacent(self, nodes: Tuple[Node, Node]):
         """Zwei Knoten (Vertices) sind adjazent, wenn eine direkte Kante (Edge) zwischen ihnen existiert"""
         node1, node2 = nodes
         for edge in self._edges:
@@ -80,14 +80,14 @@ class Graph:
 
         return False
 
-    def get_incident(self, node: Node) -> list[Edge]:
+    def get_incident(self, node: Node):
         """Ein Edge ist incident, wenn er an einem Node ein oder ausgeht"""
         return [edge for edge in self._edges if edge.getnode1() == node or edge.getnode2() == node]
 
-    def get_opposite(self, node: Node, edge: Edge) -> Node:
+    def get_opposite(self, node: Node, edge: Edge):
         return edge.getnode1() if edge.getnode1() != node else edge.getnode2()
 
-    def getnodes(self) -> list[Node]:
+    def getnodes(self):
         return self._nodes
 
     def getedges(self):
